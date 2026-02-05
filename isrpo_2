@@ -1,0 +1,157 @@
+<?php
+
+namespace app\models;
+
+use Yii;
+
+/**
+ * This is the model class for table "user".
+ *
+ * @property int $id_user
+ * @property string $fio_user
+ * @property string $login_user
+ * @property string $email_user
+ * @property string $password_user
+ * @property int $admin_user
+ *
+ * @property Problem[] $problems
+ */
+class RegForm extends User
+{
+
+    public $passwordConfirm;
+    public $agree;
+    /**
+     * {@inheritdoc}
+     */
+    public static function tableName()
+    {
+        return 'user';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function rules()
+    {
+        return [
+            [['fio_user','login_user','email_user','password_user','agree'], 'required','message' => 'Поле обязательно для заполнения'],
+            [['admin_user'], 'default', 'value' => 0],
+            ['fio_user','match','pattern' => '/^[А-Яа-я\s\-]{5,}$/u', 'message' => 'Только кириллица, пробелы и дефис'],
+            ['login_user','match','pattern' => '/^[a-zA-Z0-9]{1,}$/u', 'message' => 'Только латинские буквы и цифры'],
+            ['email_user','email','message' => 'Некорректный email-адрес'],
+            ['passwordConfirm', 'compare', 'compareAttribute' => 'password_user', 'message' => 'Пароли должны совпадать'],
+            ['agree', 'boolean'],
+            ['agree', 'compare', 'compareValue' => true, 'message' => 'Необходимо согласиться'],
+            [['admin_user'], 'integer'],
+            [['fio_user', 'login_user', 'email_user', 'password_user'], 'string', 'max' => 255],
+            [['login_user'], 'unique'],
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function attributeLabels()
+    {
+        return [
+            'id_user' => 'Id User',
+            'fio_user' => 'ФИО',
+            'login_user' => 'Login',
+            'email_user' => 'Email',
+            'password_user' => 'Пароль',
+            'admin_user' => 'Admin',
+            'passwordConfirm' => 'Подтверждение пароля',
+            'agree' => 'Даю согласие на обработку персональных данных'
+        ];
+    }
+
+    /**
+     * Gets query for [[Problems]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProblems()
+    {
+        return $this->hasMany(Problem::class, ['id_user' => 'id_user']);
+    }
+    private static $users = [
+        '100' => [
+            'id' => '100',
+            'username' => 'admin',
+            'password' => 'admin',
+            'authKey' => 'test100key',
+            'accessToken' => '100-token',
+        ],
+        '101' => [
+            'id' => '101',
+            'username' => 'demo',
+            'password' => 'demo',
+            'authKey' => 'test101key',
+            'accessToken' => '101-token',
+        ],
+    ];
+
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function findIdentity($id)
+    {
+        return self::$users($id);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function findIdentityByAccessToken($token, $type = null)
+    {
+        
+    }
+
+    /**
+     * Finds user by username
+     *
+     * @param string $username
+     * @return static|null
+     */
+    public static function findByUsername($username)
+    {
+        return self::find()->where(['login_user' => $username])->one();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getId()
+    {
+        return $this->id_user;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAuthKey()
+    {
+
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function validateAuthKey($authKey)
+    {
+
+    }
+
+    /**
+     * Validates password
+     *
+     * @param string $password password to validate
+     * @return bool if password provided is valid for current user
+     */
+    public function validatePassword($password)
+    {
+        return $this->password_user === $password;
+    }
+}
